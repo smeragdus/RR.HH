@@ -1,0 +1,94 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { employeeApi } from '../../api/employeeApi'
+import { Employee, Page } from '../../types'
+import Table from '../../components/common/Table'
+import Pagination from '../../components/common/Pagination'
+import Button from '../../components/common/Button'
+import Input from '../../components/common/Input'
+import Loading from '../../components/common/Loading'
+
+export default function EmployeeList() {
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadEmployees()
+  }, [page, search])
+
+  const loadEmployees = async () => {
+    setLoading(true)
+    try {
+      const response = await employeeApi.getAll(page, 20, search)
+      if (response.success && response.data) {
+        const data = response.data as Page<Employee>
+        setEmployees(data.content)
+        setTotalPages(data.totalPages)
+      }
+    } catch (error) {
+      console.error('Error loading employees:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setPage(0)
+    loadEmployees()
+  }
+
+  const columns = [
+    { key: 'numeroEmpleado', label: 'No. Empleado' },
+    { key: 'nombreCompleto', label: 'Nombre' },
+    { key: 'departamento', label: 'Departamento' },
+    { key: 'puesto', label: 'Puesto' },
+    { key: 'emailPersonal', label: 'Email' },
+    {
+      key: 'activo',
+      label: 'Estado',
+      render: (emp: Employee) => (
+        <span
+          className={`px-2 py-1 rounded text-xs ${
+            emp.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}
+        >
+          {emp.activo ? 'Activo' : 'Inactivo'}
+        </span>
+      ),
+    },
+  ]
+
+  if (loading) return <Loading />
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Empleados</h1>
+        <Link to="/employees/new">
+          <Button>Nuevo Empleado</Button>
+        </Link>
+      </div>
+
+      <div className="bg-white rounded-lg shadow mb-6 p-4">
+        <form onSubmit={handleSearch} className="flex gap-4">
+          <Input
+            placeholder="Buscar por nombre, número de empleado..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1"
+          />
+          <Button type="submit">Buscar</Button>
+        </form>
+      </div>
+
+      <div className="bg-white rounded-lg shadow">
+        <Table data={employees} columns={columns} />
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      </div>
+    </div>
+  )
+}

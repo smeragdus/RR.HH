@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rrhh_postgres
+    environment:
+      POSTGRES_DB: rrhh_db
+      POSTGRES_USER: rrhh_user
+      POSTGRES_PASSWORD: rrhh_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rrhh_user -d rrhh_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rrhh_backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rrhh_db
+      SPRING_DATASOURCE_USERNAME: rrhh_user
+      SPRING_DATASOURCE_PASSWORD: rrhh_password
+      JWT_SECRET: ${JWT_SECRET:-miSecretKeyParaJWTSuperSegura2024!}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rrhh_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
