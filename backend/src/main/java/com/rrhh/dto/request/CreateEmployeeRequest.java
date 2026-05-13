@@ -17,15 +17,7 @@ public class CreateEmployeeRequest {
 
     private LocalDate fechaNacimiento;
 
-    private String curp;
-
-    private String rfc;
-
-    private String nss;
-
     private String genero;
-
-    private String estadoCivil;
 
     private String direccion;
 
@@ -60,20 +52,8 @@ public class CreateEmployeeRequest {
     public LocalDate getFechaNacimiento() { return fechaNacimiento; }
     public void setFechaNacimiento(LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
 
-    public String getCurp() { return curp; }
-    public void setCurp(String curp) { this.curp = curp; }
-
-    public String getRfc() { return rfc; }
-    public void setRfc(String rfc) { this.rfc = rfc; }
-
-    public String getNss() { return nss; }
-    public void setNss(String nss) { this.nss = nss; }
-
     public String getGenero() { return genero; }
     public void setGenero(String genero) { this.genero = genero; }
-
-    public String getEstadoCivil() { return estadoCivil; }
-    public void setEstadoCivil(String estadoCivil) { this.estadoCivil = estadoCivil; }
 
     public String getDireccion() { return direccion; }
     public void setDireccion(String direccion) { this.direccion = direccion; }

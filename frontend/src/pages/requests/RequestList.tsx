@@ -71,6 +71,13 @@ export default function RequestList() {
     }
   }
 
+  const statusColors: Record<RequestStatus, { bg: string; text: string; dot: string }> = {
+    PENDIENTE: { bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-500' },
+    APROBADA: { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+    RECHAZADA: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+    CANCELADA: { bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' },
+  }
+
   const columns = [
     { key: 'numeroEmpleado', label: 'No. Empleado' },
     { key: 'nombreEmpleado', label: 'Empleado' },
@@ -81,19 +88,12 @@ export default function RequestList() {
     {
       key: 'estado',
       label: 'Estado',
-      render: (req: Request) => {
-        const colors: Record<RequestStatus, string> = {
-          PENDIENTE: 'bg-yellow-100 text-yellow-800',
-          APROBADA: 'bg-green-100 text-green-800',
-          RECHAZADA: 'bg-red-100 text-red-800',
-          CANCELADA: 'bg-gray-100 text-gray-800',
-        }
-        return (
-          <span className={`px-2 py-1 rounded text-xs ${colors[req.estado]}`}>
-            {req.estado}
-          </span>
-        )
-      },
+      render: (req: Request) => (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[req.estado].bg} ${statusColors[req.estado].text}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${statusColors[req.estado].dot}`} />
+          {req.estado}
+        </span>
+      ),
     },
     {
       key: 'actions',
@@ -104,7 +104,7 @@ export default function RequestList() {
             <>
               <Button
                 variant="success"
-                className="text-xs px-2 py-1"
+                className="text-xs px-3 py-1.5"
                 onClick={(e) => {
                   e.stopPropagation()
                   setActionModal({ request: req, action: 'approve' })
@@ -114,7 +114,7 @@ export default function RequestList() {
               </Button>
               <Button
                 variant="danger"
-                className="text-xs px-2 py-1"
+                className="text-xs px-3 py-1.5"
                 onClick={(e) => {
                   e.stopPropagation()
                   setActionModal({ request: req, action: 'reject' })
@@ -127,7 +127,7 @@ export default function RequestList() {
           {!isAdmin && req.estado === 'PENDIENTE' && (
             <Button
               variant="secondary"
-              className="text-xs px-2 py-1"
+              className="text-xs px-3 py-1.5"
               onClick={(e) => {
                 e.stopPropagation()
                 handleCancel(req.id)
@@ -144,15 +144,18 @@ export default function RequestList() {
   if (loading) return <Loading />
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Solicitudes</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold font-display text-gray-900">Solicitudes</h1>
+          <p className="text-sm text-gray-500 mt-1">Gestión de solicitudes y permisos</p>
+        </div>
         <Link to="/requests/new">
           <Button>Nueva Solicitud</Button>
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="card">
         <Table data={requests} columns={columns} />
         <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
@@ -163,20 +166,20 @@ export default function RequestList() {
           onClose={() => setActionModal(null)}
           title={actionModal.action === 'approve' ? 'Aprobar Solicitud' : 'Rechazar Solicitud'}
         >
-          <p className="mb-4">
-            ¿Está seguro de {actionModal.action === 'approve' ? 'aprobar' : 'rechazar'} la
-            solicitud de {actionModal.request.nombreEmpleado}?
+          <p className="text-gray-600 mb-4">
+            ¿Está seguro de {actionModal.action === 'approve' ? 'aprobar' : 'rechazar'} la solicitud de <span className="font-semibold">{actionModal.request.nombreEmpleado}</span>?
           </p>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Comentarios</label>
+            <label className="label">Comentarios</label>
             <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="input-field"
               rows={3}
               value={comentarios}
               onChange={(e) => setComentarios(e.target.value)}
+              placeholder="Agregue un comentario (opcional)"
             />
           </div>
-          <div className="flex justify-end gap-4">
+          <div className="flex justify-end gap-3">
             <Button variant="secondary" onClick={() => setActionModal(null)}>
               Cancelar
             </Button>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { employeeApi } from '../../api/employeeApi'
 import { Employee, Page } from '../../types'
 import Table from '../../components/common/Table'
@@ -14,6 +14,7 @@ export default function EmployeeList() {
   const [totalPages, setTotalPages] = useState(0)
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadEmployees()
@@ -41,6 +42,10 @@ export default function EmployeeList() {
     loadEmployees()
   }
 
+  const handleEdit = (employee: Employee) => {
+    navigate(`/employees/${employee.id}/edit`)
+  }
+
   const columns = [
     { key: 'numeroEmpleado', label: 'No. Empleado' },
     { key: 'nombreCompleto', label: 'Nombre' },
@@ -52,12 +57,28 @@ export default function EmployeeList() {
       label: 'Estado',
       render: (emp: Employee) => (
         <span
-          className={`px-2 py-1 rounded text-xs ${
-            emp.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          className={`px-2 py-1 rounded text-xs font-medium ${
+            emp.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
           }`}
         >
           {emp.activo ? 'Activo' : 'Inactivo'}
         </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Acciones',
+      render: (emp: Employee) => (
+        <Button
+          variant="secondary"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleEdit(emp)
+          }}
+          className="text-xs px-3 py-1"
+        >
+          Editar
+        </Button>
       ),
     },
   ]
@@ -67,13 +88,16 @@ export default function EmployeeList() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Empleados</h1>
+        <div>
+          <h1 className="text-2xl font-bold font-display text-gray-900">Empleados</h1>
+          <p className="text-sm text-gray-500 mt-1">Gestiona la información de los empleados</p>
+        </div>
         <Link to="/employees/new">
           <Button>Nuevo Empleado</Button>
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg shadow mb-6 p-4">
+      <div className="card mb-6 p-4">
         <form onSubmit={handleSearch} className="flex gap-4">
           <Input
             placeholder="Buscar por nombre, número de empleado..."
@@ -85,8 +109,8 @@ export default function EmployeeList() {
         </form>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <Table data={employees} columns={columns} />
+      <div className="card">
+        <Table data={employees} columns={columns} onRowClick={handleEdit} />
         <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
     </div>

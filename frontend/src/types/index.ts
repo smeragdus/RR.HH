@@ -28,11 +28,7 @@ export interface Employee {
   apellidoMaterno?: string
   nombreCompleto: string
   fechaNacimiento?: string
-  curp?: string
-  rfc?: string
-  nss?: string
   genero?: string
-  estadoCivil?: string
   direccion?: string
   telefono?: string
   emailPersonal?: string

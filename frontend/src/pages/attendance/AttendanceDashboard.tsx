@@ -78,56 +78,89 @@ export default function AttendanceDashboard() {
   if (loading) return <Loading />
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Control de Asistencia</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold font-display text-gray-900">Control de Asistencia</h1>
+        <p className="text-sm text-gray-500 mt-1">Registro y control de asistencia diaria</p>
+      </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Mi Asistencia de Hoy</h2>
-        <div className="flex gap-4">
+      <div className="card p-6">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold font-display text-gray-900">Mi Asistencia de Hoy</h2>
+            <p className="text-sm text-gray-500">{new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3 mb-6">
           <Button
             onClick={handleCheckIn}
             variant="success"
             disabled={actionLoading || !!myAttendance?.horaEntrada}
           >
-            {myAttendance?.horaEntrada ? '✓ Entrada Registrada' : 'Registrar Entrada'}
+            {myAttendance?.horaEntrada ? (
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Entrada Registrada - {myAttendance.horaEntrada}
+              </span>
+            ) : 'Registrar Entrada'}
           </Button>
           <Button
             onClick={handleCheckOut}
             variant="danger"
             disabled={actionLoading || !myAttendance?.horaEntrada || !!myAttendance?.horaSalida}
           >
-            {myAttendance?.horaSalida ? '✓ Salida Registrada' : 'Registrar Salida'}
+            {myAttendance?.horaSalida ? (
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Salida Registrada - {myAttendance.horaSalida}
+              </span>
+            ) : 'Registrar Salida'}
           </Button>
         </div>
 
         {myAttendance && (
-          <div className="mt-4 p-4 bg-gray-50 rounded">
-            <div className="grid grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">Fecha:</span>{' '}
-                <span className="font-medium">{myAttendance.fecha}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Entrada:</span>{' '}
-                <span className="font-medium">{myAttendance.horaEntrada || '—'}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Salida:</span>{' '}
-                <span className="font-medium">{myAttendance.horaSalida || '—'}</span>
-              </div>
-              <div>
-                <span className="text-gray-500">Horas:</span>{' '}
-                <span className="font-medium">{myAttendance.horasTrabajadas || '—'}</span>
-              </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50/50 rounded-xl border border-gray-100">
+            <div className="p-3 bg-white rounded-lg border border-gray-100">
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Fecha</div>
+              <div className="font-semibold text-gray-900">{myAttendance.fecha}</div>
+            </div>
+            <div className="p-3 bg-white rounded-lg border border-gray-100">
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Entrada</div>
+              <div className="font-semibold text-gray-900">{myAttendance.horaEntrada || '—'}</div>
+            </div>
+            <div className="p-3 bg-white rounded-lg border border-gray-100">
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Salida</div>
+              <div className="font-semibold text-gray-900">{myAttendance.horaSalida || '—'}</div>
+            </div>
+            <div className="p-3 bg-white rounded-lg border border-gray-100">
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Horas</div>
+              <div className="font-semibold text-gray-900">{myAttendance.horasTrabajadas || '—'}</div>
             </div>
           </div>
         )}
       </div>
 
       {(user?.rol === 'ADMIN' || user?.rol === 'RRHH') && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-4 border-b">
-            <h2 className="text-lg font-semibold">Asistencia de Hoy - Todos</h2>
+        <div className="card">
+          <div className="px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold font-display text-gray-900">Asistencia de Hoy - Todos</h2>
+            </div>
           </div>
           <Table data={todayAttendance} columns={columns} />
         </div>

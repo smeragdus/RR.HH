@@ -19,11 +19,7 @@ export default function EmployeeForm() {
     apellidoPaterno: '',
     apellidoMaterno: '',
     fechaNacimiento: '',
-    curp: '',
-    rfc: '',
-    nss: '',
     genero: '',
-    estadoCivil: '',
     direccion: '',
     telefono: '',
     emailPersonal: '',
@@ -50,11 +46,7 @@ export default function EmployeeForm() {
         apellidoPaterno: emp.apellidoPaterno || '',
         apellidoMaterno: emp.apellidoMaterno || '',
         fechaNacimiento: emp.fechaNacimiento || '',
-        curp: emp.curp || '',
-        rfc: emp.rfc || '',
-        nss: emp.nss || '',
         genero: emp.genero || '',
-        estadoCivil: emp.estadoCivil || '',
         direccion: emp.direccion || '',
         telefono: emp.telefono || '',
         emailPersonal: emp.emailPersonal || '',
@@ -100,11 +92,11 @@ export default function EmployeeForm() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+      <h1 className="text-2xl font-bold font-display text-gray-900 mb-6">
         {isEditing ? 'Editar Empleado' : 'Nuevo Empleado'}
       </h1>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="card p-6">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-4">
             <Input
@@ -134,27 +126,6 @@ export default function EmployeeForm() {
               value={form.fechaNacimiento}
               onChange={handleChange}
             />
-            <Input
-              label="CURP"
-              name="curp"
-              value={form.curp}
-              onChange={handleChange}
-              maxLength={18}
-            />
-            <Input
-              label="RFC"
-              name="rfc"
-              value={form.rfc}
-              onChange={handleChange}
-              maxLength={13}
-            />
-            <Input
-              label="NSS"
-              name="nss"
-              value={form.nss}
-              onChange={handleChange}
-              maxLength={15}
-            />
             <Select
               label="Género"
               name="genero"
@@ -163,18 +134,6 @@ export default function EmployeeForm() {
               options={[
                 { value: 'M', label: 'Masculino' },
                 { value: 'F', label: 'Femenino' },
-              ]}
-            />
-            <Select
-              label="Estado Civil"
-              name="estadoCivil"
-              value={form.estadoCivil}
-              onChange={handleChange}
-              options={[
-                { value: 'SOLTERO', label: 'Soltero' },
-                { value: 'CASADO', label: 'Casado' },
-                { value: 'DIVORCIADO', label: 'Divorciado' },
-                { value: 'VIUDO', label: 'Viudo' },
               ]}
             />
             <Input

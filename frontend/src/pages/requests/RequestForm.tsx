@@ -23,7 +23,6 @@ export default function RequestForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.tipo || !form.fechaInicio || !form.fechaFin) {
-      alert('Por favor complete todos los campos requeridos')
       return
     }
     setSaving(true)
@@ -44,9 +43,9 @@ export default function RequestForm() {
 
   return (
     <div className="max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Nueva Solicitud</h1>
+      <h1 className="text-2xl font-bold font-display text-gray-900 mb-6">Nueva Solicitud</h1>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="card p-6">
         <form onSubmit={handleSubmit}>
           <Select
             label="Tipo de Solicitud"
@@ -84,13 +83,14 @@ export default function RequestForm() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Motivo</label>
+            <label className="label">Motivo</label>
             <textarea
               name="motivo"
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="input-field"
               value={form.motivo}
               onChange={handleChange}
+              placeholder="Describa el motivo de su solicitud..."
             />
           </div>
 

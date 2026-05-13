@@ -15,11 +15,7 @@ public class EmployeeResponse {
     private String apellidoMaterno;
     private String nombreCompleto;
     private LocalDate fechaNacimiento;
-    private String curp;
-    private String rfc;
-    private String nss;
     private String genero;
-    private String estadoCivil;
     private String direccion;
     private String telefono;
     private String emailPersonal;
@@ -50,11 +46,7 @@ public class EmployeeResponse {
         response.setApellidoMaterno(employee.getApellidoMaterno());
         response.setNombreCompleto(employee.getNombreCompleto());
         response.setFechaNacimiento(employee.getFechaNacimiento());
-        response.setCurp(employee.getCurp());
-        response.setRfc(employee.getRfc());
-        response.setNss(employee.getNss());
         response.setGenero(employee.getGenero());
-        response.setEstadoCivil(employee.getEstadoCivil());
         response.setDireccion(employee.getDireccion());
         response.setTelefono(employee.getTelefono());
         response.setEmailPersonal(employee.getEmailPersonal());
@@ -98,20 +90,8 @@ public class EmployeeResponse {
     public LocalDate getFechaNacimiento() { return fechaNacimiento; }
     public void setFechaNacimiento(LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
 
-    public String getCurp() { return curp; }
-    public void setCurp(String curp) { this.curp = curp; }
-
-    public String getRfc() { return rfc; }
-    public void setRfc(String rfc) { this.rfc = rfc; }
-
-    public String getNss() { return nss; }
-    public void setNss(String nss) { this.nss = nss; }
-
     public String getGenero() { return genero; }
     public void setGenero(String genero) { this.genero = genero; }
-
-    public String getEstadoCivil() { return estadoCivil; }
-    public void setEstadoCivil(String estadoCivil) { this.estadoCivil = estadoCivil; }
 
     public String getDireccion() { return direccion; }
     public void setDireccion(String direccion) { this.direccion = direccion; }
@@ -182,11 +162,7 @@ public class EmployeeResponse {
         public EmployeeResponseBuilder apellidoMaterno(String apellidoMaterno) { response.apellidoMaterno = apellidoMaterno; return this; }
         public EmployeeResponseBuilder nombreCompleto(String nombreCompleto) { response.nombreCompleto = nombreCompleto; return this; }
         public EmployeeResponseBuilder fechaNacimiento(LocalDate fechaNacimiento) { response.fechaNacimiento = fechaNacimiento; return this; }
-        public EmployeeResponseBuilder curp(String curp) { response.curp = curp; return this; }
-        public EmployeeResponseBuilder rfc(String rfc) { response.rfc = rfc; return this; }
-        public EmployeeResponseBuilder nss(String nss) { response.nss = nss; return this; }
         public EmployeeResponseBuilder genero(String genero) { response.genero = genero; return this; }
-        public EmployeeResponseBuilder estadoCivil(String estadoCivil) { response.estadoCivil = estadoCivil; return this; }
         public EmployeeResponseBuilder direccion(String direccion) { response.direccion = direccion; return this; }
         public EmployeeResponseBuilder telefono(String telefono) { response.telefono = telefono; return this; }
         public EmployeeResponseBuilder emailPersonal(String emailPersonal) { response.emailPersonal = emailPersonal; return this; }

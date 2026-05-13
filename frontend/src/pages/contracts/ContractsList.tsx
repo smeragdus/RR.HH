@@ -43,8 +43,8 @@ export default function ContractList() {
       label: 'Estado',
       render: (c: Contract) => (
         <span
-          className={`px-2 py-1 rounded text-xs ${
-            c.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          className={`px-2 py-1 rounded text-xs font-medium ${
+            c.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
           }`}
         >
           {c.activo ? 'Activo' : 'Inactivo'}
@@ -56,10 +56,13 @@ export default function ContractList() {
   if (loading) return <Loading />
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Contratos</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold font-display text-gray-900">Contratos</h1>
+        <p className="text-sm text-gray-500 mt-1">Gestión de contratos laborales</p>
+      </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="card">
         <Table data={contracts} columns={columns} />
         <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>

@@ -83,11 +83,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .apellidoPaterno(request.getApellidoPaterno())
                 .apellidoMaterno(request.getApellidoMaterno())
                 .fechaNacimiento(request.getFechaNacimiento())
-                .curp(request.getCurp())
-                .rfc(request.getRfc())
-                .nss(request.getNss())
                 .genero(request.getGenero())
-                .estadoCivil(request.getEstadoCivil())
                 .direccion(request.getDireccion())
                 .telefono(request.getTelefono())
                 .emailPersonal(request.getEmailPersonal())
@@ -124,11 +120,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setApellidoPaterno(request.getApellidoPaterno());
         employee.setApellidoMaterno(request.getApellidoMaterno());
         employee.setFechaNacimiento(request.getFechaNacimiento());
-        employee.setCurp(request.getCurp());
-        employee.setRfc(request.getRfc());
-        employee.setNss(request.getNss());
         employee.setGenero(request.getGenero());
-        employee.setEstadoCivil(request.getEstadoCivil());
         employee.setDireccion(request.getDireccion());
         employee.setTelefono(request.getTelefono());
         employee.setEmailPersonal(request.getEmailPersonal());

@@ -31,20 +31,8 @@ public class Employee {
     @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
 
-    @Column(unique = true, length = 18)
-    private String curp;
-
-    @Column(unique = true, length = 13)
-    private String rfc;
-
-    @Column(unique = true, length = 15)
-    private String nss;
-
     @Column(length = 10)
     private String genero;
-
-    @Column(name = "estado_civil", length = 20)
-    private String estadoCivil;
 
     @Column(columnDefinition = "TEXT")
     private String direccion;
@@ -121,7 +109,6 @@ public class Employee {
         updatedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -140,20 +127,8 @@ public class Employee {
     public LocalDate getFechaNacimiento() { return fechaNacimiento; }
     public void setFechaNacimiento(LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
 
-    public String getCurp() { return curp; }
-    public void setCurp(String curp) { this.curp = curp; }
-
-    public String getRfc() { return rfc; }
-    public void setRfc(String rfc) { this.rfc = rfc; }
-
-    public String getNss() { return nss; }
-    public void setNss(String nss) { this.nss = nss; }
-
     public String getGenero() { return genero; }
     public void setGenero(String genero) { this.genero = genero; }
-
-    public String getEstadoCivil() { return estadoCivil; }
-    public void setEstadoCivil(String estadoCivil) { this.estadoCivil = estadoCivil; }
 
     public String getDireccion() { return direccion; }
     public void setDireccion(String direccion) { this.direccion = direccion; }
@@ -213,7 +188,6 @@ public class Employee {
         return apellidoPaterno + (apellidoMaterno != null ? " " + apellidoMaterno : "") + " " + nombres;
     }
 
-    // Static builder method
     public static EmployeeBuilder builder() {
         return new EmployeeBuilder();
     }
@@ -227,11 +201,7 @@ public class Employee {
         public EmployeeBuilder apellidoPaterno(String apellidoPaterno) { employee.apellidoPaterno = apellidoPaterno; return this; }
         public EmployeeBuilder apellidoMaterno(String apellidoMaterno) { employee.apellidoMaterno = apellidoMaterno; return this; }
         public EmployeeBuilder fechaNacimiento(LocalDate fechaNacimiento) { employee.fechaNacimiento = fechaNacimiento; return this; }
-        public EmployeeBuilder curp(String curp) { employee.curp = curp; return this; }
-        public EmployeeBuilder rfc(String rfc) { employee.rfc = rfc; return this; }
-        public EmployeeBuilder nss(String nss) { employee.nss = nss; return this; }
         public EmployeeBuilder genero(String genero) { employee.genero = genero; return this; }
-        public EmployeeBuilder estadoCivil(String estadoCivil) { employee.estadoCivil = estadoCivil; return this; }
         public EmployeeBuilder direccion(String direccion) { employee.direccion = direccion; return this; }
         public EmployeeBuilder telefono(String telefono) { employee.telefono = telefono; return this; }
         public EmployeeBuilder emailPersonal(String emailPersonal) { employee.emailPersonal = emailPersonal; return this; }
