@@ -1,73 +1,55 @@
-# Sistema de Gestión de Recursos Humanos
+# SistemaHR
 
-Sistema web para la gestión integral de recursos humanos con autenticación JWT.
+Sistema web MVP para gestion de recursos humanos, asistencia, solicitudes, contratos, reportes y auditoria.
 
-## Tech Stack
+## Requisitos
 
-- **Backend**: Spring Boot 3.2.4, Java 17, Spring Security, JPA
-- **Frontend**: React 18, TypeScript, Vite, TailwindCSS, React Router
-- **Base de datos**: PostgreSQL 16
-- **Contenedores**: Docker Compose
+- Java 21+
+- Maven 3.9+
+- Node.js 20+
+- Docker Desktop para PostgreSQL local
 
-## Estructura del Proyecto
+## Arranque local
 
-```
-RR.HH/
-├── backend/          # API Spring Boot
-├── frontend/        # Aplicación React
-├── docker-compose.yml
-└── init.sql         # Esquema de base de datos
+1. Iniciar PostgreSQL:
+
+```powershell
+docker compose up -d
 ```
 
-## Setup
+2. Iniciar backend:
 
-1. **Clonar y configurar variables de entorno**
-   ```bash
-   cp .env.example .env  # Configurar JWT_SECRET
-   ```
-
-2. **Iniciar con Docker Compose**
-   ```bash
-   docker-compose up -d
-   ```
-
-3. **Acceso**
-   - Frontend: http://localhost
-   - API: http://localhost:8080
-
-## Desarrollo Local
-
-### Backend
-```bash
+```powershell
 cd backend
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
-### Frontend
-```bash
+3. Iniciar frontend:
+
+```powershell
 cd frontend
 npm install
 npm run dev
 ```
 
-## Funcionalidades
+Frontend: `http://localhost:5173`
+Backend: `http://localhost:8080`
 
-- Autenticación con JWT
-- Gestión de empleados
-- Control de asistencia
-- Gestión de solicitudes
-- Gestión de contratos
-- Exportación de reportes en Excel
+## Usuarios semilla
 
-## API Endpoints
+Todos usan la clave `Password123!`.
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| POST | /api/auth/login | Iniciar sesión |
-| GET/POST | /api/employees | Listar/Crear empleados |
-| GET/PUT/DELETE | /api/employees/{id} | Gestionar empleado |
-| GET/POST | /api/requests | Listar/Crear solicitudes |
-| GET/PUT | /api/requests/{id} | Actualizar solicitud |
-| GET/POST | /api/contracts | Listar/Crear contratos |
-| GET | /api/attendance | Registro de asistencia |
-| GET | /api/reports/export | Exportar Excel |
+- `admin@sistemahr.local` / `ADMIN`
+- `rrhh@sistemahr.local` / `RRHH`
+- `jefe@sistemahr.local` / `JEFE`
+- `empleado@sistemahr.local` / `EMPLEADO`
+
+## Variables utiles
+
+- `DB_URL`, recomendado para Docker local `jdbc:postgresql://127.0.0.1:55432/sistemahr`
+- `DB_USERNAME`, por defecto `postgres`
+- `DB_PASSWORD`, por defecto `postgres`
+- `JWT_SECRET`
+- `UPLOAD_DIR`, por defecto `uploads`
+- `ATTENDANCE_START_TIME`, por defecto `09:00`
+- `ATTENDANCE_LATE_TOLERANCE_MINUTES`, por defecto `10`

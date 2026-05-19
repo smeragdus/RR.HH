@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:sistemahr;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+app:
+  jwt-secret: SistemaHRJwtSecretKeyForTestsOnlyChangeMe123456789
+  jwt-expiration-minutes: 60
+  upload-dir: target/test-uploads
+  attendance:
+    start-time: "09:00"
+    late-tolerance-minutes: 10

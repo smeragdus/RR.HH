@@ -1,43 +1,31 @@
 spring:
   application:
-    name: RRHH Backend
-
+    name: sistema-hr
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/rrhh_db}
-    username: ${SPRING_DATASOURCE_USERNAME:rrhh_user}
-    password: ${SPRING_DATASOURCE_PASSWORD:rrhh_password}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 300000
-      connection-timeout: 20000
-
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/sistemahr}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-
+  flyway:
+    enabled: true
   servlet:
     multipart:
       max-file-size: 10MB
-      max-request-size: 10MB
+      max-request-size: 20MB
 
 server:
-  port: 8080
-  servlet:
-    context-path: /api
+  port: ${SERVER_PORT:8080}
 
-jwt:
-  secret: ${JWT_SECRET:miSecretKeyParaJWTSuperSegura2024QueDebeSerMuyLarga!}
-  expiration: 86400000  # 24 horas en milisegundos
+app:
+  jwt-secret: ${JWT_SECRET:SistemaHRJwtSecretKeyForDevelopmentOnlyChangeMe123456789}
+  jwt-expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
+  upload-dir: ${UPLOAD_DIR:uploads}
+  attendance:
+    start-time: ${ATTENDANCE_START_TIME:09:00}
+    late-tolerance-minutes: ${ATTENDANCE_LATE_TOLERANCE_MINUTES:10}
 
-logging:
-  level:
-    root: INFO
-    com.rrhh: DEBUG
-    org.springframework.security: INFO

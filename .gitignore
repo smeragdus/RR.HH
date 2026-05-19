@@ -1,35 +1,7 @@
-# Dependencies
-node_modules/
-vendor/
-
-# Build outputs
-dist/
-build/
-target/
-*.jar
-*.war
-
-# IDE
-.idea/
-*.iml
-.vscode/
-*.swp
-*.swo
-.DS_Store
-
-# Logs
-*.log
-logs/
-
-# Environment
+backend/target/
+frontend/node_modules/
+frontend/dist/
+uploads/
+output/
 .env
-.env.local
-.env.*.local
-
-# Docker
-docker-compose.override.yml
-
-# Misc
-*.bak
-*.tmp
-*.temp
+*.log
