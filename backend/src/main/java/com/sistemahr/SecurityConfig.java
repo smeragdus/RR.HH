@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import javax.crypto.SecretKey;
@@ -44,7 +45,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @ConfigurationProperties(prefix = "app")
-record AppProperties(String jwtSecret, long jwtExpirationMinutes, String uploadDir, AttendanceProperties attendance) {
+record AppProperties(String jwtSecret, long jwtExpirationMinutes, String uploadDir, String corsAllowedOrigins, AttendanceProperties attendance) {
     record AttendanceProperties(LocalTime startTime, int lateToleranceMinutes) {}
 }
 
@@ -152,6 +153,7 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
 class SecurityConfig {
     private final JwtService jwt;
     private final SecurityUserDetailsService userDetailsService;
+    private final AppProperties props;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -160,6 +162,7 @@ class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.svg", "/icons.svg", "/logo-mendoza.svg").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/logout").permitAll()
                         .anyRequest().authenticated())
@@ -187,7 +190,10 @@ class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173", "http://127.0.0.1:5173"));
+        config.setAllowedOrigins(Arrays.stream(props.corsAllowedOrigins().split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .toList());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Content-Disposition"));

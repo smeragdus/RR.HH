@@ -460,6 +460,9 @@ class RequestService {
 
     @Transactional
     AbsenceRequestDto reject(Long id, RejectRequest dto) {
+        if (dto == null || dto.reason() == null || dto.reason().isBlank()) {
+            throw new BusinessException("El motivo de rechazo es obligatorio");
+        }
         AbsenceRequest request = requests.findById(id).orElseThrow();
         request.setStatus(RequestStatus.RECHAZADA);
         request.setRejectionReason(dto.reason());
