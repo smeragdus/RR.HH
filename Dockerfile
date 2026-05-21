@@ -16,7 +16,7 @@ WORKDIR /app
 COPY backend ./backend
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 WORKDIR /app/backend
-RUN mvn package -DskipTests -B
+RUN mvn package -DskipTests -Dfrontend.skip=true -B
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

@@ -171,6 +171,7 @@
 							<goal>exec</goal>
 						</goals>
 						<configuration>
+							<skip>${frontend.skip}</skip>
 							<workingDirectory>${project.basedir}/../frontend</workingDirectory>
 							<executable>npm</executable>
 							<arguments>
@@ -185,6 +186,7 @@
 							<goal>exec</goal>
 						</goals>
 						<configuration>
+							<skip>${frontend.skip}</skip>
 							<workingDirectory>${project.basedir}/../frontend</workingDirectory>
 							<executable>npm</executable>
 							<environmentVariables>
