@@ -152,6 +152,7 @@ class EmployeeService {
     @Transactional
     EmployeeDto save(Long id, EmployeeRequest request) {
         Employee employee = id == null ? new Employee() : employees.findById(id).orElseThrow();
+        validateEmployeeIdentity(request);
         if ((id == null && employees.existsByDni(request.dni())) || (id != null && employees.existsByDniAndIdNot(request.dni(), id))) {
             throw new BusinessException("Ya existe un empleado con el mismo DNI");
         }
@@ -169,6 +170,15 @@ class EmployeeService {
         employees.save(employee);
         audit.log(id == null ? "CREATE" : "UPDATE", "EMPLEADOS", String.valueOf(employee.getId()), employee.getFirstName() + " " + employee.getLastName());
         return Mappers.employee(employee);
+    }
+
+    private void validateEmployeeIdentity(EmployeeRequest request) {
+        if (request.dni() == null || !request.dni().matches("\\d{8}")) {
+            throw new BusinessException("El DNI debe tener exactamente 8 dígitos");
+        }
+        if (request.phone() != null && !request.phone().isBlank() && !request.phone().matches("9\\d{8}")) {
+            throw new BusinessException("El teléfono debe empezar por 9 y tener 9 dígitos");
+        }
     }
 
     @Transactional
@@ -227,6 +237,10 @@ class DocumentService {
 
     List<DocumentDto> byEmployee(Long employeeId) {
         return documents.findByEmployeeId(employeeId).stream().map(Mappers::document).toList();
+    }
+
+    List<DocumentDto> byRequest(Long requestId) {
+        return documents.findByRequestId(requestId).stream().map(Mappers::document).toList();
     }
 
     EmployeeDocument find(Long id) {

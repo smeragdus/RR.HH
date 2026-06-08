@@ -8,6 +8,7 @@ import {
   FileText,
   FileUp,
   Fingerprint,
+  Search,
   RotateCcw,
   ShieldCheck,
   Upload,
@@ -145,12 +146,6 @@ function Login({ onLogin, api, error }) {
         <img className="login-logo" src="/logo-mendoza.svg" alt="Grupo Mendoza Hnos. S.A.C." />
         <h1>Gestión laboral integrada</h1>
         <p>Personal, asistencia, contratos, solicitudes y auditoría para Grupo Mendoza Hnos. S.A.C.</p>
-        <div className="demo-users">
-          <span>admin@sistemahr.local</span>
-          <span>rrhh@sistemahr.local</span>
-          <span>jefe@sistemahr.local</span>
-          <span>empleado@sistemahr.local</span>
-        </div>
       </section>
       <form className="login-card" onSubmit={submit}>
         <h2>Acceso seguro</h2>
@@ -191,6 +186,14 @@ function Employees({ api }) {
 
   async function submit(event) {
     event.preventDefault()
+    if (!/^\d{8}$/.test(form.dni || '')) {
+      alert('El DNI debe tener exactamente 8 dígitos.')
+      return
+    }
+    if (form.phone && !/^9\d{8}$/.test(form.phone)) {
+      alert('El teléfono debe empezar por 9 y tener 9 dígitos.')
+      return
+    }
     const saved = editing ? await api.put(`/employees/${editing}`, form) : await api.post('/employees', form)
     if (saved) {
       setForm(initialEmployee)
@@ -208,7 +211,11 @@ function Employees({ api }) {
     <section className="split">
       <form className="panel form-grid" onSubmit={submit}>
         <h2>{editing ? 'Editar empleado' : 'Registrar empleado'}</h2>
-        {['firstName', 'lastName', 'dni', 'phone', 'email', 'position', 'area', 'location'].map((key) => (
+        <label>{label('firstName')}<input value={form.firstName || ''} onChange={(e) => setForm({ ...form, firstName: e.target.value })} /></label>
+        <label>{label('lastName')}<input value={form.lastName || ''} onChange={(e) => setForm({ ...form, lastName: e.target.value })} /></label>
+        <label>{label('dni')}<input inputMode="numeric" maxLength={8} pattern="\d{8}" value={form.dni || ''} onChange={(e) => setForm({ ...form, dni: digits(e.target.value).slice(0, 8) })} /></label>
+        <label>{label('phone')}<input inputMode="numeric" maxLength={9} pattern="9\d{8}" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: digits(e.target.value).slice(0, 9) })} /></label>
+        {['email', 'position', 'area', 'location'].map((key) => (
           <label key={key}>{label(key)}<input value={form[key] || ''} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></label>
         ))}
         <button className="primary"><UserPlus size={17} /> Guardar</button>
@@ -265,10 +272,20 @@ function Attendance({ api, user }) {
 
 function Requests({ api, user }) {
   const [rows, setRows] = useState([])
+  const [documents, setDocuments] = useState({})
   const [form, setForm] = useState({ type: 'PERMISO', startDate: '', endDate: '', reason: '' })
   const [file, setFile] = useState(null)
-  const load = () => api.get('/requests').then((data) => setRows(Array.isArray(data) ? data : []))
+  const load = () => api.get('/requests').then((data) => {
+    const nextRows = Array.isArray(data) ? data : []
+    setRows(nextRows)
+    loadRequestDocuments(nextRows)
+  })
   useEffect(() => { load() }, [])
+
+  async function loadRequestDocuments(nextRows) {
+    const entries = await Promise.all(nextRows.map(async (row) => [row.id, await api.get(`/requests/${row.id}/documents`)]))
+    setDocuments(Object.fromEntries(entries.map(([id, docs]) => [id, Array.isArray(docs) ? docs : []])))
+  }
 
   async function submit(event) {
     event.preventDefault()
@@ -300,16 +317,7 @@ function Requests({ api, user }) {
       </form>}
       <div className="panel">
         <h2>Solicitudes</h2>
-        <Table rows={rows} columns={['employeeName', 'type', 'startDate', 'endDate', 'status', 'rejectionReason']} actions={(row) => user.role !== 'EMPLEADO' && row.status === 'PENDIENTE' ? (
-          <>
-            <button onClick={() => api.patch(`/requests/${row.id}/approve`).then(load)}>Aprobar</button>
-            <button onClick={() => {
-              const reason = window.prompt('Motivo de rechazo')
-              if (reason) api.patch(`/requests/${row.id}/reject`, { reason }).then(load)
-            }}>Rechazar</button>
-            <label className="inline-upload"><FileUp size={16} /> Adjuntar<input type="file" accept=".pdf,image/*" onChange={(e) => uploadFor(row, e.target.files?.[0])} /></label>
-          </>
-        ) : user.role !== 'EMPLEADO' ? <label className="inline-upload"><FileUp size={16} /> Adjuntar<input type="file" accept=".pdf,image/*" onChange={(e) => uploadFor(row, e.target.files?.[0])} /></label> : null} />
+        <RequestTable rows={rows} documents={documents} api={api} user={user} load={load} uploadFor={uploadFor} />
       </div>
     </section>
   )
@@ -412,8 +420,59 @@ function UsersPanel({ api }) {
 
 function Audit({ api }) {
   const [rows, setRows] = useState([])
-  useEffect(() => { api.get('/audit').then((data) => setRows(Array.isArray(data) ? data : [])) }, [])
-  return <section className="panel"><Table rows={rows} columns={['actorName', 'actorDni', 'actorPosition', 'action', 'module', 'occurredAt', 'description']} /></section>
+  const [filter, setFilter] = useState('')
+  const load = () => api.get(`/audit${filter.trim() ? `?user=${encodeURIComponent(filter.trim())}` : ''}`).then((data) => setRows(Array.isArray(data) ? data : []))
+  useEffect(() => { load() }, [])
+  return (
+    <section className="panel">
+      <form className="toolbar audit-filter" onSubmit={(event) => { event.preventDefault(); load() }}>
+        <label>Filtrar por usuario, DNI o cargo<input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Ej. Rosa, 00000002, RRHH" /></label>
+        <button className="primary"><Search size={17} /> Buscar</button>
+        <button type="button" onClick={() => { setFilter(''); api.get('/audit').then((data) => setRows(Array.isArray(data) ? data : [])) }}>Limpiar</button>
+      </form>
+      <Table rows={rows} columns={['actorName', 'actorDni', 'actorPosition', 'action', 'module', 'occurredAt', 'description']} />
+    </section>
+  )
+}
+
+function RequestTable({ rows = [], documents = {}, api, user, load, uploadFor }) {
+  if (!rows.length) return <div className="empty">Sin solicitudes.</div>
+  return (
+    <div className="table-wrap">
+      <table>
+        <thead><tr>{['Empleado', 'Tipo', 'Inicio', 'Fin', 'Estado', 'Motivo rechazo', 'Comprobantes', 'Acciones'].map(h => <th key={h}>{h}</th>)}</tr></thead>
+        <tbody>{rows.map((row) => (
+          <tr key={row.id}>
+            <td>{row.employeeName}</td>
+            <td>{row.type}</td>
+            <td>{row.startDate}</td>
+            <td>{row.endDate}</td>
+            <td>{row.status}</td>
+            <td>{row.rejectionReason || ''}</td>
+            <td>
+              <div className="document-list">
+                {(documents[row.id] || []).length ? documents[row.id].map((doc) => (
+                  <button key={doc.id} type="button" onClick={() => api.download(`/documents/${doc.id}/download`, doc.originalName)}>
+                    <FileText size={15} /> {doc.originalName}
+                  </button>
+                )) : <span className="muted">Sin archivo</span>}
+              </div>
+            </td>
+            <td className="actions">
+              {user.role !== 'EMPLEADO' && row.status === 'PENDIENTE' && <>
+                <button onClick={() => api.patch(`/requests/${row.id}/approve`).then(load)}>Aprobar</button>
+                <button onClick={() => {
+                  const reason = window.prompt('Motivo de rechazo')
+                  if (reason) api.patch(`/requests/${row.id}/reject`, { reason }).then(load)
+                }}>Rechazar</button>
+              </>}
+              {user.role !== 'EMPLEADO' && <label className="inline-upload"><FileUp size={16} /> Adjuntar<input type="file" accept=".pdf,image/*" onChange={(e) => uploadFor(row, e.target.files?.[0])} /></label>}
+            </td>
+          </tr>
+        ))}</tbody>
+      </table>
+    </div>
+  )
 }
 
 function Table({ rows = [], columns, actions, empty = 'Sin datos.' }) {
@@ -511,6 +570,10 @@ function label(key) {
 
 function reportExportType(type) {
   return type === 'active-employees' ? 'employees' : type
+}
+
+function digits(value) {
+  return String(value || '').replace(/\D/g, '')
 }
 
 export default App

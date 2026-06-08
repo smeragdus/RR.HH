@@ -192,6 +192,11 @@ class RequestController {
         return Mappers.document(documents.uploadForRequest(id, file));
     }
 
+    @GetMapping("/{id}/documents")
+    List<DocumentDto> documents(@PathVariable Long id) {
+        return documents.byRequest(id);
+    }
+
     @PatchMapping("/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMIN','RRHH','JEFE')")
     AbsenceRequestDto approve(@PathVariable Long id) {
@@ -279,8 +284,11 @@ class AuditController {
     private final AuditLogRepository audits;
 
     @GetMapping
-    List<AuditDto> list() {
-        return audits.findTop200ByOrderByOccurredAtDesc().stream().map(Mappers::audit).toList();
+    List<AuditDto> list(@RequestParam(required = false) String user) {
+        List<AuditLog> rows = user == null || user.isBlank()
+                ? audits.findTop200ByOrderByOccurredAtDesc()
+                : audits.findTop200ByActorEmailContainingIgnoreCaseOrActorNameContainingIgnoreCaseOrActorDniContainingIgnoreCaseOrActorPositionContainingIgnoreCaseOrderByOccurredAtDesc(user, user, user, user);
+        return rows.stream().map(Mappers::audit).toList();
     }
 }
 

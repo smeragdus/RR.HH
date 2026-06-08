@@ -45,6 +45,7 @@ interface ContractRepository extends JpaRepository<LaborContract, Long> {
 
 interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     List<AuditLog> findTop200ByOrderByOccurredAtDesc();
+    List<AuditLog> findTop200ByActorEmailContainingIgnoreCaseOrActorNameContainingIgnoreCaseOrActorDniContainingIgnoreCaseOrActorPositionContainingIgnoreCaseOrderByOccurredAtDesc(String email, String name, String dni, String position);
 }
 
 interface NotificationRepository extends JpaRepository<Notification, Long> {

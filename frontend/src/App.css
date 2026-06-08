@@ -31,7 +31,8 @@ button:hover, .button:hover, .inline-upload:hover { border-color: #009ee2; box-s
 .login-page {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(320px, 1fr) 430px;
+  grid-template-columns: minmax(320px, 1fr) minmax(340px, 430px);
+  align-items: center;
   background:
     radial-gradient(circle at 18% 20%, rgba(156,255,0,.32), transparent 24%),
     radial-gradient(circle at 58% 22%, rgba(255,245,0,.28), transparent 22%),
@@ -39,12 +40,22 @@ button:hover, .button:hover, .inline-upload:hover { border-color: #009ee2; box-s
   padding: 46px;
   gap: 42px;
 }
-.login-copy { color: #082d63; align-self: center; max-width: 760px; }
-.login-logo { width: min(420px, 78vw); display: block; margin-bottom: 28px; filter: drop-shadow(0 18px 30px rgba(8,45,99,.12)); }
+.login-copy {
+  color: #082d63;
+  align-self: center;
+  max-width: 760px;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+.login-logo {
+  width: min(420px, 78vw);
+  display: block;
+  margin: 0 auto 28px;
+  filter: drop-shadow(0 18px 30px rgba(8,45,99,.12));
+}
 .login-copy h1 { font-size: clamp(42px, 7vw, 84px); line-height: .93; margin: 0 0 18px; letter-spacing: 0; }
 .login-copy p { font-size: 21px; max-width: 640px; color: #244365; }
-.demo-users { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
-.demo-users span { border: 1px solid rgba(8,45,99,.22); padding: 8px 10px; border-radius: 999px; background: rgba(255,255,255,.62); }
 .login-card {
   align-self: center;
   background: rgba(255,255,255,.92);
@@ -53,7 +64,7 @@ button:hover, .button:hover, .inline-upload:hover { border-color: #009ee2; box-s
   padding: 30px;
   box-shadow: 0 30px 80px rgba(8,45,99,.18);
 }
-.login-card h2 { margin-top: 0; font-size: 28px; color: #082d63; }
+.login-card h2 { margin-top: 0; font-size: 28px; color: #082d63; text-align: center; }
 
 .shell { display: grid; grid-template-columns: 292px 1fr; min-height: 100vh; }
 .sidebar {
@@ -130,6 +141,18 @@ textarea { min-height: 90px; resize: vertical; }
 .upload-strip div { min-width: 260px; }
 .inline-upload { position: relative; overflow: hidden; min-height: 36px; }
 .inline-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.document-list { display: grid; gap: 6px; min-width: 180px; }
+.document-list button {
+  justify-content: flex-start;
+  min-height: 32px;
+  padding: 0 8px;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.muted { color: #6d8298; font-size: 13px; }
+.audit-filter { align-items: end; justify-content: flex-start; }
+.audit-filter label { min-width: min(360px, 100%); }
 .table-wrap { overflow: auto; max-width: 100%; }
 table { width: 100%; border-collapse: collapse; min-width: 760px; }
 th { text-align: left; font-size: 12px; color: #40607f; text-transform: uppercase; border-bottom: 1px solid #cbd9e4; padding: 10px; }
