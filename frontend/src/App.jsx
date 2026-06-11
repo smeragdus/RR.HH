@@ -194,7 +194,7 @@ function Employees({ api }) {
       alert('El teléfono debe empezar por 9 y tener 9 dígitos.')
       return
     }
-    const saved = editing ? await api.put(`/employees/${editing}`, form) : await api.post('/employees', form)
+    const saved = editing ? await api.updateEmployee(editing, form) : await api.post('/employees', form)
     if (saved) {
       setForm(initialEmployee)
       setEditing(null)
@@ -226,8 +226,8 @@ function Employees({ api }) {
           <>
             <button onClick={() => edit(row)}>Editar</button>
             {row.employmentStatus === 'ACTIVO'
-              ? <button onClick={() => api.patch(`/employees/${row.id}/deactivate`).then(load)}>Baja</button>
-              : <button onClick={() => api.patch(`/employees/${row.id}/reinstate`).then(load)}><RotateCcw size={16} /> Reincorporar</button>}
+              ? <button onClick={() => api.deactivateEmployee(row.id).then(load)}>Baja</button>
+              : <button onClick={() => api.reinstateEmployee(row.id).then(load)}><RotateCcw size={16} /> Reincorporar</button>}
           </>
         )} />
       </div>
@@ -244,7 +244,7 @@ function Attendance({ api, user }) {
   async function uploadExcel(event) {
     event.preventDefault()
     if (!file) return
-    const imported = await api.upload(`/attendance/import?workDate=${workDate}`, { file })
+    const imported = await api.importAttendance(workDate, file)
     if (Array.isArray(imported)) setRows(imported)
     setFile(null)
   }
@@ -283,7 +283,7 @@ function Requests({ api, user }) {
   useEffect(() => { load() }, [])
 
   async function loadRequestDocuments(nextRows) {
-    const entries = await Promise.all(nextRows.map(async (row) => [row.id, await api.get(`/requests/${row.id}/documents`)]))
+    const entries = await Promise.all(nextRows.map(async (row) => [row.id, await api.requestDocuments(row.id)]))
     setDocuments(Object.fromEntries(entries.map(([id, docs]) => [id, Array.isArray(docs) ? docs : []])))
   }
 
@@ -291,7 +291,7 @@ function Requests({ api, user }) {
     event.preventDefault()
     const saved = await api.post('/requests', form)
     if (saved?.id && file) {
-      await api.upload(`/requests/${saved.id}/documents`, { file })
+      await api.uploadRequestDocument(saved.id, file)
     }
     setForm({ type: 'PERMISO', startDate: '', endDate: '', reason: '' })
     setFile(null)
@@ -300,7 +300,7 @@ function Requests({ api, user }) {
 
   async function uploadFor(row, selectedFile) {
     if (!selectedFile) return
-    await api.upload(`/requests/${row.id}/documents`, { file: selectedFile })
+    await api.uploadRequestDocument(row.id, selectedFile)
     load()
   }
 
@@ -337,7 +337,7 @@ function Contracts({ api }) {
     event.preventDefault()
     const saved = await api.post('/contracts', { ...form, employeeId: Number(form.employeeId) })
     if (saved?.id && file) {
-      await api.upload(`/contracts/${saved.id}/documents`, { file })
+      await api.uploadContractDocument(saved.id, file)
     }
     setForm({ employeeId: '', contractType: '', startDate: '', endDate: '', status: 'VIGENTE' })
     setFile(null)
@@ -345,7 +345,7 @@ function Contracts({ api }) {
   }
   async function uploadFor(row, selectedFile) {
     if (!selectedFile) return
-    await api.upload(`/contracts/${row.id}/documents`, { file: selectedFile })
+    await api.uploadContractDocument(row.id, selectedFile)
     load()
   }
   return (
@@ -369,7 +369,7 @@ function Contracts({ api }) {
 function Reports({ api }) {
   const [type, setType] = useState('active-employees')
   const [rows, setRows] = useState([])
-  const load = () => api.get(`/reports/${type}`).then((data) => setRows(Array.isArray(data) ? data : []))
+  const load = () => api.report(type).then((data) => setRows(Array.isArray(data) ? data : []))
   useEffect(() => { load() }, [type])
   const columns = type === 'attendance' ? ['employeeName', 'workDate', 'checkIn', 'checkOut', 'status'] : type === 'vacations' ? ['employeeName', 'startDate', 'endDate', 'status'] : ['firstName', 'lastName', 'position', 'area', 'location']
   return (
@@ -380,8 +380,8 @@ function Reports({ api }) {
           <option value="attendance">Asistencia</option>
           <option value="vacations">Vacaciones</option>
         </select>
-        <button onClick={() => api.download(`/reports/${reportExportType(type)}/export/pdf`, `reporte-${type}.pdf`)}><Download size={17} /> PDF</button>
-        <button onClick={() => api.download(`/reports/${reportExportType(type)}/export/excel`, `reporte-${type}.xlsx`)}><Download size={17} /> Excel</button>
+        <button onClick={() => api.downloadReport(type, 'pdf')}><Download size={17} /> PDF</button>
+        <button onClick={() => api.downloadReport(type, 'excel')}><Download size={17} /> Excel</button>
       </div>
       <Table rows={rows} columns={columns} />
     </section>
@@ -421,14 +421,14 @@ function UsersPanel({ api }) {
 function Audit({ api }) {
   const [rows, setRows] = useState([])
   const [filter, setFilter] = useState('')
-  const load = () => api.get(`/audit${filter.trim() ? `?user=${encodeURIComponent(filter.trim())}` : ''}`).then((data) => setRows(Array.isArray(data) ? data : []))
+  const load = () => api.audit(filter).then((data) => setRows(Array.isArray(data) ? data : []))
   useEffect(() => { load() }, [])
   return (
     <section className="panel">
       <form className="toolbar audit-filter" onSubmit={(event) => { event.preventDefault(); load() }}>
         <label>Filtrar por usuario, DNI o cargo<input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Ej. Rosa, 00000002, RRHH" /></label>
         <button className="primary"><Search size={17} /> Buscar</button>
-        <button type="button" onClick={() => { setFilter(''); api.get('/audit').then((data) => setRows(Array.isArray(data) ? data : [])) }}>Limpiar</button>
+        <button type="button" onClick={() => { setFilter(''); api.audit('').then((data) => setRows(Array.isArray(data) ? data : [])) }}>Limpiar</button>
       </form>
       <Table rows={rows} columns={['actorName', 'actorDni', 'actorPosition', 'action', 'module', 'occurredAt', 'description']} />
     </section>
@@ -452,7 +452,7 @@ function RequestTable({ rows = [], documents = {}, api, user, load, uploadFor })
             <td>
               <div className="document-list">
                 {(documents[row.id] || []).length ? documents[row.id].map((doc) => (
-                  <button key={doc.id} type="button" onClick={() => api.download(`/documents/${doc.id}/download`, doc.originalName)}>
+                  <button key={doc.id} type="button" onClick={() => api.downloadDocument(doc.id, doc.originalName)}>
                     <FileText size={15} /> {doc.originalName}
                   </button>
                 )) : <span className="muted">Sin archivo</span>}
@@ -460,10 +460,10 @@ function RequestTable({ rows = [], documents = {}, api, user, load, uploadFor })
             </td>
             <td className="actions">
               {user.role !== 'EMPLEADO' && row.status === 'PENDIENTE' && <>
-                <button onClick={() => api.patch(`/requests/${row.id}/approve`).then(load)}>Aprobar</button>
+                <button onClick={() => api.approveRequest(row.id).then(load)}>Aprobar</button>
                 <button onClick={() => {
                   const reason = window.prompt('Motivo de rechazo')
-                  if (reason) api.patch(`/requests/${row.id}/reject`, { reason }).then(load)
+                  if (reason) api.rejectRequest(row.id, reason).then(load)
                 }}>Rechazar</button>
               </>}
               {user.role !== 'EMPLEADO' && <label className="inline-upload"><FileUp size={16} /> Adjuntar<input type="file" accept=".pdf,image/*" onChange={(e) => uploadFor(row, e.target.files?.[0])} /></label>}
@@ -513,10 +513,29 @@ function createApi(setError) {
     post: (path, body, auth) => request('POST', path, body, auth),
     put: (path, body) => request('PUT', path, body),
     patch: (path, body) => request('PATCH', path, body),
-    upload: async (path, files) => {
+    updateEmployee: (id, body) => request('PUT', employeePath(id), body),
+    deactivateEmployee: (id) => request('PATCH', `${employeePath(id)}/deactivate`),
+    reinstateEmployee: (id) => request('PATCH', `${employeePath(id)}/reinstate`),
+    importAttendance: (workDate, file) => uploadFile(attendanceImportPath(workDate), file),
+    report: (type) => request('GET', reportPath(type)),
+    downloadReport: (type, format) => {
+      const report = reportType(type)
+      const output = reportFormat(format)
+      return downloadFile(reportExportPath(report, output), `reporte-${report}.${output === 'excel' ? 'xlsx' : 'pdf'}`)
+    },
+    audit: (filter) => request('GET', auditPath(filter)),
+    requestDocuments: (id) => request('GET', requestDocumentsPath(id)),
+    approveRequest: (id) => request('PATCH', requestActionPath(id, 'approve')),
+    rejectRequest: (id, reason) => request('PATCH', requestActionPath(id, 'reject'), { reason }),
+    uploadRequestDocument: (id, file) => uploadFile(requestDocumentsPath(id), file),
+    uploadContractDocument: (id, file) => uploadFile(contractDocumentsPath(id), file),
+    downloadDocument: (id, filename) => downloadFile(documentDownloadPath(id), filename),
+  }
+
+  async function uploadFile(path, file) {
       setError('')
       const formData = new FormData()
-      Object.entries(files).forEach(([key, value]) => formData.append(key, value))
+      formData.append('file', file)
       const headers = {}
       const csrf = await csrfToken('POST')
       if (csrf) headers['X-XSRF-TOKEN'] = csrf
@@ -533,8 +552,9 @@ function createApi(setError) {
         return null
       }
       return response.json().catch(() => null)
-    },
-    download: async (path, filename) => {
+  }
+
+  async function downloadFile(path, filename) {
       setError('')
       const response = await fetch(`${API}${path}`, { credentials: 'include' })
       if (!response.ok) {
@@ -548,8 +568,85 @@ function createApi(setError) {
       link.download = filename
       link.click()
       window.URL.revokeObjectURL(url)
-    },
   }
+}
+
+function numericId(value) {
+  const id = Number(value)
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new Error('Identificador invalido')
+  }
+  return id
+}
+
+function employeePath(id) {
+  return `/employees/${numericId(id)}`
+}
+
+function attendanceImportPath(workDate) {
+  return `/attendance/import?workDate=${dateValue(workDate)}`
+}
+
+function reportPath(type) {
+  return `/reports/${reportType(type)}`
+}
+
+function reportExportPath(report, output) {
+  return `/reports/${reportType(report)}/export/${reportFormat(output)}`
+}
+
+function requestDocumentsPath(id) {
+  return `/requests/${numericId(id)}/documents`
+}
+
+function requestActionPath(id, action) {
+  if (action !== 'approve' && action !== 'reject') {
+    throw new Error('Accion invalida')
+  }
+  return `/requests/${numericId(id)}/${action}`
+}
+
+function contractDocumentsPath(id) {
+  return `/contracts/${numericId(id)}/documents`
+}
+
+function documentDownloadPath(id) {
+  return `/documents/${numericId(id)}/download`
+}
+
+function dateValue(value) {
+  const date = String(value || '')
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error('Fecha invalida')
+  }
+  return date
+}
+
+function reportType(value) {
+  const allowed = {
+    'active-employees': 'employees',
+    employees: 'employees',
+    attendance: 'attendance',
+    vacations: 'vacations',
+  }
+  const report = allowed[value]
+  if (!report) {
+    throw new Error('Reporte invalido')
+  }
+  return report
+}
+
+function reportFormat(value) {
+  if (value !== 'pdf' && value !== 'excel') {
+    throw new Error('Formato invalido')
+  }
+  return value
+}
+
+function auditPath(filter) {
+  const query = String(filter || '').trim()
+  if (!query) return '/audit'
+  return `/audit?${new URLSearchParams({ user: query }).toString()}`
 }
 
 async function csrfToken(method) {
@@ -582,10 +679,6 @@ function label(key) {
   return {
     firstName: 'Nombres', lastName: 'Apellidos', dni: 'DNI', phone: 'Teléfono', email: 'Correo', position: 'Cargo', area: 'Área', location: 'Sede', employmentStatus: 'Estado', employeeName: 'Empleado', importedPosition: 'Cargo huellero', hoursWorked: 'Horas trabajadas', workDate: 'Fecha', checkIn: 'Entrada', checkOut: 'Salida', status: 'Estado', late: 'Tardanza', type: 'Tipo', startDate: 'Inicio', endDate: 'Fin', rejectionReason: 'Motivo rechazo', contractType: 'Contrato', role: 'Rol', actorEmail: 'Usuario', actorName: 'Nombre', actorDni: 'DNI', actorPosition: 'Cargo', action: 'Acción', module: 'Módulo', occurredAt: 'Hora', message: 'Mensaje', createdAt: 'Fecha', description: 'Detalle'
   }[key] || key
-}
-
-function reportExportType(type) {
-  return type === 'active-employees' ? 'employees' : type
 }
 
 function digits(value) {
