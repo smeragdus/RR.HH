@@ -22,32 +22,32 @@ const roleLabels = { ADMIN: 'Administrador', RRHH: 'RR.HH.', JEFE: 'Jefe', EMPLE
 const initialEmployee = { firstName: '', lastName: '', dni: '', phone: '', email: '', position: '', area: '', location: '', employmentStatus: 'ACTIVO' }
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token') || '')
   const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [view, setView] = useState('dashboard')
   const [error, setError] = useState('')
 
-  const api = useMemo(() => createApi(token, setError), [token])
+  const api = useMemo(() => createApi(setError), [])
 
   useEffect(() => {
-    if (!token) return
-    api.get('/auth/me').then((data) => data ? setUser(data) : logout()).catch(() => logout())
-  }, [token])
+    api.get('/auth/me').then((data) => {
+      if (data) setUser(data)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
 
   function onLogin(response) {
-    localStorage.setItem('token', response.token)
-    setToken(response.token)
     setUser(response.user)
     setView('dashboard')
   }
 
-  function logout() {
-    localStorage.removeItem('token')
-    setToken('')
+  async function logout() {
+    await api.post('/auth/logout')
     setUser(null)
   }
 
-  if (!token || !user) return <Login onLogin={onLogin} api={api} error={error} />
+  if (loading) return null
+  if (!user) return <Login onLogin={onLogin} api={api} error={error} />
 
   const nav = navigationFor(user.role)
 
@@ -487,14 +487,15 @@ function Table({ rows = [], columns, actions, empty = 'Sin datos.' }) {
   )
 }
 
-function createApi(token, setError) {
+function createApi(setError) {
   async function request(method, path, body, auth = true) {
     setError('')
     const headers = { 'Content-Type': 'application/json' }
-    if (auth && token) headers.Authorization = `Bearer ${token}`
+    const csrf = await csrfToken(method)
+    if (csrf) headers['X-XSRF-TOKEN'] = csrf
     let response
     try {
-      response = await fetch(`${API}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined })
+      response = await fetch(`${API}${path}`, { method, headers, credentials: 'include', body: body ? JSON.stringify(body) : undefined })
     } catch {
       setError('No se pudo conectar con el backend. Verifica que Spring Boot esté activo en http://127.0.0.1:8080')
       return null
@@ -516,9 +517,12 @@ function createApi(token, setError) {
       setError('')
       const formData = new FormData()
       Object.entries(files).forEach(([key, value]) => formData.append(key, value))
+      const headers = {}
+      const csrf = await csrfToken('POST')
+      if (csrf) headers['X-XSRF-TOKEN'] = csrf
       let response
       try {
-        response = await fetch(`${API}${path}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData })
+        response = await fetch(`${API}${path}`, { method: 'POST', headers, credentials: 'include', body: formData })
       } catch {
         setError('No se pudo cargar el archivo')
         return null
@@ -532,7 +536,7 @@ function createApi(token, setError) {
     },
     download: async (path, filename) => {
       setError('')
-      const response = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${token}` } })
+      const response = await fetch(`${API}${path}`, { credentials: 'include' })
       if (!response.ok) {
         setError('No se pudo descargar el reporte')
         return
@@ -547,6 +551,18 @@ function createApi(token, setError) {
     },
   }
 }
+
+async function csrfToken(method) {
+  if (method === 'GET') return ''
+  if (cachedCsrfToken) return cachedCsrfToken
+  const response = await fetch(`${API}/auth/csrf`, { credentials: 'include' })
+  if (!response.ok) return ''
+  const data = await response.json().catch(() => ({}))
+  cachedCsrfToken = data.token || ''
+  return cachedCsrfToken
+}
+
+let cachedCsrfToken = ''
 
 function navigationFor(role) {
   const all = [{ id: 'dashboard', label: 'Panel', icon: ShieldCheck }]

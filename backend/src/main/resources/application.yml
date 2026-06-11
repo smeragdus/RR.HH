@@ -27,6 +27,7 @@ app:
   upload-dir: ${UPLOAD_DIR:uploads}
   cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
   initial-admin-password: ${INITIAL_ADMIN_PASSWORD:}
+  cookie-secure: ${COOKIE_SECURE:true}
   attendance:
     start-time: ${ATTENDANCE_START_TIME:09:00}
     late-tolerance-minutes: ${ATTENDANCE_LATE_TOLERANCE_MINUTES:10}

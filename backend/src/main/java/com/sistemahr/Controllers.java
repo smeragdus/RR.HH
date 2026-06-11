@@ -13,7 +13,9 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,18 +37,40 @@ import org.springframework.web.multipart.MultipartFile;
 class AuthController {
     private final AuthService auth;
     private final CurrentUserService current;
+    private final AppProperties props;
 
     @PostMapping("/login")
-    LoginResponse login(@Valid @RequestBody LoginRequest request) {
-        return auth.login(request);
+    ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        AuthenticatedLogin login = auth.login(request);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, sessionCookie(login.token(), props.cookieSecure()).toString())
+                .body(new LoginResponse(login.user()));
     }
 
     @PostMapping("/logout")
-    void logout() {}
+    ResponseEntity<Void> logout() {
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, sessionCookie("", props.cookieSecure()).maxAge(0).toString())
+                .build();
+    }
 
     @GetMapping("/me")
     UserDto me() {
         return Mappers.user(current.account());
+    }
+
+    @GetMapping("/csrf")
+    CsrfResponse csrf(CsrfToken token) {
+        return new CsrfResponse(token.getToken());
+    }
+
+    private ResponseCookie.ResponseCookieBuilder sessionCookie(String value, boolean secure) {
+        return ResponseCookie.from(JwtAuthenticationFilter.AUTH_COOKIE, value)
+                .httpOnly(true)
+                .secure(secure)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(value.isBlank() ? 0 : props.jwtExpirationMinutes() * 60);
     }
 }
 

@@ -60,7 +60,7 @@ class ServicesUnitTests {
         when(encoder.matches("clave", "hash")).thenReturn(true);
         when(jwt.generate(account)).thenReturn("jwt-token");
 
-        LoginResponse response = service.login(new LoginRequest("admin@empresa.com", "clave"));
+        AuthenticatedLogin response = service.login(new LoginRequest("admin@empresa.com", "clave"));
 
         assertThat(response.token()).isEqualTo("jwt-token");
         assertThat(response.user().email()).isEqualTo("admin@empresa.com");
@@ -687,6 +687,7 @@ class ServicesUnitTests {
                 tempDir.toString(),
                 "http://localhost:5173,http://127.0.0.1:5173",
                 "",
+                false,
                 new AppProperties.AttendanceProperties(LocalTime.of(8, 0), 10)
         );
     }

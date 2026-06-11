@@ -10,10 +10,13 @@ try {
     </StrictMode>,
   )
 } catch (error) {
-  document.getElementById('root').innerHTML = `
-    <main class="startup-error">
-      <h1>No se pudo cargar SistemaHR</h1>
-      <p>${error?.message || 'Error inesperado al iniciar la interfaz.'}</p>
-    </main>
-  `
+  const root = document.getElementById('root')
+  const main = document.createElement('main')
+  const title = document.createElement('h1')
+  const message = document.createElement('p')
+  main.className = 'startup-error'
+  title.textContent = 'No se pudo cargar SistemaHR'
+  message.textContent = 'Error inesperado al iniciar la interfaz.'
+  main.append(title, message)
+  root.replaceChildren(main)
 }

@@ -10,7 +10,9 @@ import java.time.LocalTime;
 import java.math.BigDecimal;
 
 record LoginRequest(@Email @NotBlank String email, @NotBlank @Size(max = 128) String password) {}
-record LoginResponse(String token, UserDto user) {}
+record AuthenticatedLogin(String token, UserDto user) {}
+record LoginResponse(UserDto user) {}
+record CsrfResponse(String token) {}
 record UserDto(Long id, String email, Role role, AccountStatus status, Long employeeId, String employeeName) {}
 record UserRequest(@Email @NotBlank String email, @Size(min = 12, max = 128) String password, @NotNull Role role, AccountStatus status, Long employeeId) {}
 

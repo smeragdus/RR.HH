@@ -82,7 +82,7 @@ class AuthService {
     private final PasswordEncoder encoder;
     private final JwtService jwt;
 
-    LoginResponse login(LoginRequest request) {
+    AuthenticatedLogin login(LoginRequest request) {
         UserAccount user = users.findByEmail(request.email()).orElseThrow(() -> new BusinessException("Credenciales incorrectas"));
         if (user.getStatus() != AccountStatus.ACTIVO || (user.getEmployee() != null && user.getEmployee().getEmploymentStatus() == EmploymentStatus.INACTIVO)) {
             throw new BusinessException("Usuario inactivo");
@@ -90,7 +90,7 @@ class AuthService {
         if (!encoder.matches(request.password(), user.getPassword())) {
             throw new BusinessException("Credenciales incorrectas");
         }
-        return new LoginResponse(jwt.generate(user), Mappers.user(user));
+        return new AuthenticatedLogin(jwt.generate(user), Mappers.user(user));
     }
 }
 

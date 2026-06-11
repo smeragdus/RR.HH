@@ -15,6 +15,7 @@ app:
   upload-dir: target/test-uploads
   cors-allowed-origins: http://localhost:5173,http://127.0.0.1:5173
   initial-admin-password:
+  cookie-secure: false
   attendance:
     start-time: "09:00"
     late-tolerance-minutes: 10
