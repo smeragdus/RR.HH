@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import './App.css'
 
-const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8080/api'
+const API = import.meta.env.VITE_API_URL || '/api'
 const roleLabels = { ADMIN: 'Administrador', RRHH: 'RR.HH.', JEFE: 'Jefe', EMPLEADO: 'Empleado' }
 const initialEmployee = { firstName: '', lastName: '', dni: '', phone: '', email: '', position: '', area: '', location: '', employmentStatus: 'ACTIVO' }
 
@@ -137,7 +137,7 @@ function Login({ onLogin, api, error }) {
   async function submit(event) {
     event.preventDefault()
     const response = await api.post('/auth/login', { email, password }, false)
-    if (response?.token) onLogin(response)
+    if (response?.user) onLogin(response)
   }
 
   return (
@@ -497,7 +497,7 @@ function createApi(setError) {
     try {
       response = await fetch(`${API}${path}`, { method, headers, credentials: 'include', body: body ? JSON.stringify(body) : undefined })
     } catch {
-      setError('No se pudo conectar con el backend. Verifica que Spring Boot esté activo en http://127.0.0.1:8080')
+      setError('No se pudo conectar con el backend.')
       return null
     }
     if (!response.ok) {
