@@ -3,6 +3,7 @@ package com.sistemahr;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -127,15 +128,22 @@ class EmployeeController {
 @RequiredArgsConstructor
 class DocumentController {
     private final DocumentService documents;
+    private final AppProperties props;
 
     @GetMapping("/{id}/download")
     @PreAuthorize("hasAnyRole('ADMIN','RRHH','JEFE')")
     ResponseEntity<FileSystemResource> download(@PathVariable Long id) throws IOException {
         EmployeeDocument doc = documents.find(id);
-        FileSystemResource resource = new FileSystemResource(doc.getPath());
+        Path uploadRoot = Path.of(props.uploadDir()).toAbsolutePath().normalize();
+        Path filePath = Path.of(doc.getPath()).toAbsolutePath().normalize();
+        if (!filePath.startsWith(uploadRoot)) {
+            throw new BusinessException("Archivo no disponible");
+        }
+        FileSystemResource resource = new FileSystemResource(filePath);
+        String contentType = doc.getContentType() == null ? Files.probeContentType(resource.getFile().toPath()) : doc.getContentType();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(doc.getOriginalName()).build().toString())
-                .contentType(MediaType.parseMediaType(doc.getContentType() == null ? Files.probeContentType(resource.getFile().toPath()) : doc.getContentType()))
+                .contentType(MediaType.parseMediaType(contentType == null ? MediaType.APPLICATION_OCTET_STREAM_VALUE : contentType))
                 .body(resource);
     }
 }
@@ -308,11 +316,12 @@ class NotificationController {
 class ApiExceptionHandler {
     @ExceptionHandler({BusinessException.class, IllegalArgumentException.class, MethodArgumentNotValidException.class})
     ResponseEntity<ErrorResponse> badRequest(Exception ex) {
-        return ResponseEntity.badRequest().body(new ErrorResponse(ex.getMessage(), LocalDateTime.now()));
+        String message = ex instanceof MethodArgumentNotValidException ? "Solicitud invalida" : ex.getMessage();
+        return ResponseEntity.badRequest().body(new ErrorResponse(message, LocalDateTime.now()));
     }
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<ErrorResponse> server(Exception ex) {
-        return ResponseEntity.internalServerError().body(new ErrorResponse(ex.getMessage(), LocalDateTime.now()));
+        return ResponseEntity.internalServerError().body(new ErrorResponse("Error interno del servidor", LocalDateTime.now()));
     }
 }

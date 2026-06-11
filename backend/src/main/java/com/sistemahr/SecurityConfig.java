@@ -45,7 +45,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @ConfigurationProperties(prefix = "app")
-record AppProperties(String jwtSecret, long jwtExpirationMinutes, String uploadDir, String corsAllowedOrigins, AttendanceProperties attendance) {
+record AppProperties(String jwtSecret, long jwtExpirationMinutes, String uploadDir, String corsAllowedOrigins, String initialAdminPassword, AttendanceProperties attendance) {
     record AttendanceProperties(LocalTime startTime, int lateToleranceMinutes) {}
 }
 
@@ -117,7 +117,11 @@ class JwtService {
     }
 
     private SecretKey key() {
-        return Keys.hmacShaKeyFor(props.jwtSecret().getBytes(StandardCharsets.UTF_8));
+        String secret = props.jwtSecret();
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException("JWT_SECRET must contain at least 32 characters");
+        }
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 }
 
@@ -163,7 +167,7 @@ class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers("/api/auth/logout").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
@@ -197,7 +201,7 @@ class SecurityConfig {
                 .filter(origin -> !origin.isBlank())
                 .toList());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
         config.setExposedHeaders(List.of("Content-Disposition"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

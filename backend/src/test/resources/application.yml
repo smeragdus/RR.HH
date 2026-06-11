@@ -10,10 +10,11 @@ spring:
   flyway:
     enabled: false
 app:
-  jwt-secret: SistemaHRJwtSecretKeyForTestsOnlyChangeMe123456789
+  jwt-secret: ${JWT_SECRET:}
   jwt-expiration-minutes: 60
   upload-dir: target/test-uploads
   cors-allowed-origins: http://localhost:5173,http://127.0.0.1:5173
+  initial-admin-password:
   attendance:
     start-time: "09:00"
     late-tolerance-minutes: 10

@@ -11,20 +11,22 @@ Sistema web MVP para gestion de recursos humanos, asistencia, solicitudes, contr
 
 ## Arranque local
 
-1. Iniciar PostgreSQL:
+1. Crear un archivo `.env` desde `.env.example` y completar valores propios para `POSTGRES_PASSWORD`, `JWT_SECRET` e `INITIAL_ADMIN_PASSWORD`.
+
+2. Iniciar PostgreSQL y los servicios con Docker:
 
 ```powershell
 docker compose up -d
 ```
 
-2. Iniciar backend:
+3. Iniciar backend fuera de Docker, si lo necesitas:
 
 ```powershell
 cd backend
 mvn spring-boot:run
 ```
 
-3. Iniciar frontend:
+4. Iniciar frontend fuera de Docker:
 
 ```powershell
 cd frontend
@@ -37,7 +39,7 @@ Backend: `http://localhost:8080`
 
 ## Usuarios semilla
 
-Todos usan la clave `Password123!`.
+Los usuarios semilla se crean solo si defines `INITIAL_ADMIN_PASSWORD`. Esa clave temporal se aplica a todos y debe cambiarse despues del primer acceso.
 
 - `admin@sistemahr.local` / `ADMIN`
 - `rrhh@sistemahr.local` / `RRHH`
@@ -47,9 +49,10 @@ Todos usan la clave `Password123!`.
 ## Variables utiles
 
 - `DB_URL`, recomendado para Docker local `jdbc:postgresql://127.0.0.1:55432/sistemahr`
-- `DB_USERNAME`, por defecto `postgres`
-- `DB_PASSWORD`, por defecto `postgres`
-- `JWT_SECRET`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `JWT_SECRET`, minimo 32 caracteres
+- `INITIAL_ADMIN_PASSWORD`
 - `UPLOAD_DIR`, por defecto `uploads`
 - `CORS_ALLOWED_ORIGINS`, por defecto `http://localhost:5173,http://127.0.0.1:5173`
 - `ATTENDANCE_START_TIME`, por defecto `09:00`

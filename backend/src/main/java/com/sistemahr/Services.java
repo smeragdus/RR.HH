@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Cell;
@@ -121,7 +122,7 @@ class UserService {
         user.setStatus(request.status() == null ? AccountStatus.ACTIVO : request.status());
         user.setEmployee(request.employeeId() == null ? null : employees.findById(request.employeeId()).orElseThrow());
         users.save(user);
-        audit.log(id == null ? "CREATE" : "UPDATE", "USUARIOS", String.valueOf(user.getId()), "Usuario " + user.getEmail());
+        audit.log(id == null ? "CREATE" : "UPDATE", "USUARIOS", String.valueOf(user.getId()), "Usuario actualizado");
         return Mappers.user(user);
     }
 }
@@ -168,7 +169,7 @@ class EmployeeService {
         employee.setUpdatedAt(LocalDateTime.now());
         employee.setUpdatedBy(current.account().getEmail());
         employees.save(employee);
-        audit.log(id == null ? "CREATE" : "UPDATE", "EMPLEADOS", String.valueOf(employee.getId()), employee.getFirstName() + " " + employee.getLastName());
+        audit.log(id == null ? "CREATE" : "UPDATE", "EMPLEADOS", String.valueOf(employee.getId()), "Empleado actualizado");
         return Mappers.employee(employee);
     }
 
@@ -264,8 +265,12 @@ class DocumentService {
         }
         Path dir = Path.of(props.uploadDir()).toAbsolutePath();
         Files.createDirectories(dir);
-        String storedName = System.currentTimeMillis() + "-" + Objects.requireNonNull(file.getOriginalFilename()).replaceAll("[^a-zA-Z0-9._-]", "_");
-        Path target = dir.resolve(storedName);
+        String originalName = Objects.requireNonNull(file.getOriginalFilename()).replaceAll("[^a-zA-Z0-9._-]", "_");
+        String storedName = UUID.randomUUID() + "-" + originalName;
+        Path target = dir.resolve(storedName).normalize();
+        if (!target.startsWith(dir)) {
+            throw new BusinessException("Nombre de archivo no permitido");
+        }
         file.transferTo(target);
         EmployeeDocument doc = new EmployeeDocument();
         doc.setOriginalName(file.getOriginalFilename());
@@ -303,7 +308,7 @@ class AttendanceService {
         record.setLate(late);
         record.setStatus(late ? AttendanceStatus.TARDANZA : AttendanceStatus.PRESENTE);
         attendance.save(record);
-        audit.log("CHECK_IN", "ASISTENCIA", String.valueOf(record.getId()), employee.getDni());
+        audit.log("CHECK_IN", "ASISTENCIA", String.valueOf(record.getId()), "Registro de entrada");
         return Mappers.attendance(record);
     }
 
@@ -316,7 +321,7 @@ class AttendanceService {
             throw new BusinessException("Ya registraste salida para este turno");
         }
         record.setCheckOut(LocalTime.now());
-        audit.log("CHECK_OUT", "ASISTENCIA", String.valueOf(record.getId()), employee.getDni());
+        audit.log("CHECK_OUT", "ASISTENCIA", String.valueOf(record.getId()), "Registro de salida");
         return Mappers.attendance(record);
     }
 
@@ -483,7 +488,7 @@ class RequestService {
         request.setReviewedAt(LocalDateTime.now());
         request.setReviewedBy(current.account().getEmail());
         notifyEmployee(request, "Tu solicitud " + request.getType() + " fue rechazada: " + dto.reason());
-        audit.log("REJECT", "SOLICITUDES", String.valueOf(id), dto.reason());
+        audit.log("REJECT", "SOLICITUDES", String.valueOf(id), "Solicitud rechazada");
         return Mappers.request(request);
     }
 

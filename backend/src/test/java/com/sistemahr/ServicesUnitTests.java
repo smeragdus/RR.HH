@@ -135,7 +135,7 @@ class ServicesUnitTests {
         verify(users).save(captor.capture());
         assertThat(captor.getValue().getPassword()).isEqualTo("encoded");
         assertThat(dto.status()).isEqualTo(AccountStatus.ACTIVO);
-        verify(audit).log("CREATE", "USUARIOS", "30", "Usuario rrhh@empresa.com");
+        verify(audit).log("CREATE", "USUARIOS", "30", "Usuario actualizado");
     }
 
     @Test
@@ -172,7 +172,7 @@ class ServicesUnitTests {
 
         assertThat(dto.employmentStatus()).isEqualTo(EmploymentStatus.ACTIVO);
         assertThat(dto.updatedBy()).isEqualTo("rrhh@empresa.com");
-        verify(audit).log("CREATE", "EMPLEADOS", "50", "Maria Lopez");
+        verify(audit).log("CREATE", "EMPLEADOS", "50", "Empleado actualizado");
     }
 
     @Test
@@ -366,7 +366,7 @@ class ServicesUnitTests {
         assertThat(dto.rejectionReason()).isEqualTo("No corresponde");
         assertThat(dto.reviewedBy()).isEqualTo("jefe@empresa.com");
         verify(notifications).save(any(Notification.class));
-        verify(audit).log("REJECT", "SOLICITUDES", "12", "No corresponde");
+        verify(audit).log("REJECT", "SOLICITUDES", "12", "Solicitud rechazada");
     }
 
     @Test
@@ -686,6 +686,7 @@ class ServicesUnitTests {
                 60,
                 tempDir.toString(),
                 "http://localhost:5173,http://127.0.0.1:5173",
+                "",
                 new AppProperties.AttendanceProperties(LocalTime.of(8, 0), 10)
         );
     }

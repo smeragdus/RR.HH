@@ -12,11 +12,15 @@ class DataInitializer implements CommandLineRunner {
     private final UserRepository users;
     private final EmployeeRepository employees;
     private final PasswordEncoder encoder;
+    private final AppProperties props;
 
     @Override
     @Transactional
     public void run(String... args) {
         if (users.existsByEmail("admin@sistemahr.local")) {
+            return;
+        }
+        if (props.initialAdminPassword() == null || props.initialAdminPassword().isBlank()) {
             return;
         }
         Employee adminEmployee = employee("Admin", "Sistema", "00000001", "admin@sistemahr.local", "Administrador", "Direccion", "Principal");
@@ -44,7 +48,7 @@ class DataInitializer implements CommandLineRunner {
     private void create(String email, Role role, Employee employee) {
         UserAccount user = new UserAccount();
         user.setEmail(email);
-        user.setPassword(encoder.encode("Password123!"));
+        user.setPassword(encoder.encode(props.initialAdminPassword()));
         user.setRole(role);
         user.setEmployee(employee);
         users.save(user);

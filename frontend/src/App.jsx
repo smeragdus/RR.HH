@@ -122,7 +122,7 @@ class ModuleBoundary extends Component {
       return (
         <div className="panel error-panel">
           <h2>No se pudo abrir este módulo</h2>
-          <p>{this.state.error.message}</p>
+          <p>Intenta recargar la vista.</p>
         </div>
       )
     }
@@ -132,7 +132,7 @@ class ModuleBoundary extends Component {
 
 function Login({ onLogin, api, error }) {
   const [email, setEmail] = useState('admin@sistemahr.local')
-  const [password, setPassword] = useState('Password123!')
+  const [password, setPassword] = useState('')
 
   async function submit(event) {
     event.preventDefault()
