@@ -37,7 +37,7 @@ jobs:
 
       - name: Instalar frontend
         working-directory: frontend
-        run: npm ci
+        run: npm install
 
       - name: Compilar frontend
         working-directory: frontend
