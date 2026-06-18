@@ -10,6 +10,7 @@ try {
     </StrictMode>,
   )
 } catch (error) {
+  console.error('No se pudo iniciar SistemaHR', error)
   const root = document.getElementById('root')
   const main = document.createElement('main')
   const title = document.createElement('h1')

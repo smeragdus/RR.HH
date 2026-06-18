@@ -1,4 +1,5 @@
 import { Component, useEffect, useMemo, useState } from 'react'
+import PropTypes from 'prop-types'
 import {
   BriefcaseBusiness,
   CalendarCheck,
@@ -20,6 +21,29 @@ import './App.css'
 const API = import.meta.env.VITE_API_URL || '/api'
 const roleLabels = { ADMIN: 'Administrador', RRHH: 'RR.HH.', JEFE: 'Jefe', EMPLEADO: 'Empleado' }
 const initialEmployee = { firstName: '', lastName: '', dni: '', phone: '', email: '', position: '', area: '', location: '', employmentStatus: 'ACTIVO' }
+const rowShape = PropTypes.object
+const apiShape = PropTypes.shape({
+  audit: PropTypes.func.isRequired,
+  approveRequest: PropTypes.func.isRequired,
+  deactivateEmployee: PropTypes.func.isRequired,
+  downloadDocument: PropTypes.func.isRequired,
+  downloadReport: PropTypes.func.isRequired,
+  get: PropTypes.func.isRequired,
+  importAttendance: PropTypes.func.isRequired,
+  post: PropTypes.func.isRequired,
+  reinstateEmployee: PropTypes.func.isRequired,
+  rejectRequest: PropTypes.func.isRequired,
+  report: PropTypes.func.isRequired,
+  requestDocuments: PropTypes.func.isRequired,
+  updateEmployee: PropTypes.func.isRequired,
+  uploadContractDocument: PropTypes.func.isRequired,
+  uploadRequestDocument: PropTypes.func.isRequired,
+})
+const userShape = PropTypes.shape({
+  email: PropTypes.string,
+  employeeName: PropTypes.string,
+  role: PropTypes.string.isRequired,
+})
 
 function App() {
   const [user, setUser] = useState(null)
@@ -102,6 +126,11 @@ function App() {
 }
 
 class ModuleBoundary extends Component {
+  static propTypes = {
+    children: PropTypes.node,
+    resetKey: PropTypes.string.isRequired,
+  }
+
   constructor(props) {
     super(props)
     this.state = { error: null }
@@ -136,7 +165,7 @@ function Login({ onLogin, api, error }) {
 
   async function submit(event) {
     event.preventDefault()
-    const response = await api.post('/auth/login', { email, password }, false)
+    const response = await api.post('/auth/login', { email, password })
     if (response?.user) onLogin(response)
   }
 
@@ -158,6 +187,12 @@ function Login({ onLogin, api, error }) {
   )
 }
 
+Login.propTypes = {
+  api: apiShape.isRequired,
+  error: PropTypes.string,
+  onLogin: PropTypes.func.isRequired,
+}
+
 function Dashboard({ api, user }) {
   const [notifications, setNotifications] = useState([])
   useEffect(() => { api.get('/notifications').then((data) => setNotifications(Array.isArray(data) ? data : [])) }, [])
@@ -175,6 +210,11 @@ function Dashboard({ api, user }) {
       </div>
     </section>
   )
+}
+
+Dashboard.propTypes = {
+  api: apiShape.isRequired,
+  user: userShape.isRequired,
 }
 
 function Employees({ api }) {
@@ -207,6 +247,17 @@ function Employees({ api }) {
     setForm({ ...initialEmployee, ...row })
   }
 
+  function renderActions(row) {
+    return (
+      <>
+        <button onClick={() => edit(row)}>Editar</button>
+        {row.employmentStatus === 'ACTIVO'
+          ? <button onClick={() => api.deactivateEmployee(row.id).then(load)}>Baja</button>
+          : <button onClick={() => api.reinstateEmployee(row.id).then(load)}><RotateCcw size={16} /> Reincorporar</button>}
+      </>
+    )
+  }
+
   return (
     <section className="split">
       <form className="panel form-grid" onSubmit={submit}>
@@ -222,17 +273,14 @@ function Employees({ api }) {
       </form>
       <div className="panel">
         <h2>Empleados</h2>
-        <Table rows={rows} columns={['firstName', 'lastName', 'dni', 'position', 'area', 'employmentStatus']} actions={(row) => (
-          <>
-            <button onClick={() => edit(row)}>Editar</button>
-            {row.employmentStatus === 'ACTIVO'
-              ? <button onClick={() => api.deactivateEmployee(row.id).then(load)}>Baja</button>
-              : <button onClick={() => api.reinstateEmployee(row.id).then(load)}><RotateCcw size={16} /> Reincorporar</button>}
-          </>
-        )} />
+        <Table rows={rows} columns={['firstName', 'lastName', 'dni', 'position', 'area', 'employmentStatus']} actions={renderActions} />
       </div>
     </section>
   )
+}
+
+Employees.propTypes = {
+  api: apiShape.isRequired,
 }
 
 function Attendance({ api, user }) {
@@ -270,22 +318,28 @@ function Attendance({ api, user }) {
   )
 }
 
+Attendance.propTypes = {
+  api: apiShape.isRequired,
+  user: userShape.isRequired,
+}
+
 function Requests({ api, user }) {
   const [rows, setRows] = useState([])
   const [documents, setDocuments] = useState({})
   const [form, setForm] = useState({ type: 'PERMISO', startDate: '', endDate: '', reason: '' })
   const [file, setFile] = useState(null)
+
+  async function loadRequestDocuments(nextRows) {
+    const entries = await Promise.all(nextRows.map(async (row) => [row.id, await api.requestDocuments(row.id)]))
+    setDocuments(Object.fromEntries(entries.map(([id, docs]) => [id, Array.isArray(docs) ? docs : []])))
+  }
+
   const load = () => api.get('/requests').then((data) => {
     const nextRows = Array.isArray(data) ? data : []
     setRows(nextRows)
     loadRequestDocuments(nextRows)
   })
   useEffect(() => { load() }, [])
-
-  async function loadRequestDocuments(nextRows) {
-    const entries = await Promise.all(nextRows.map(async (row) => [row.id, await api.requestDocuments(row.id)]))
-    setDocuments(Object.fromEntries(entries.map(([id, docs]) => [id, Array.isArray(docs) ? docs : []])))
-  }
 
   async function submit(event) {
     event.preventDefault()
@@ -323,6 +377,11 @@ function Requests({ api, user }) {
   )
 }
 
+Requests.propTypes = {
+  api: apiShape.isRequired,
+  user: userShape.isRequired,
+}
+
 function Contracts({ api }) {
   const [employees, setEmployees] = useState([])
   const [rows, setRows] = useState([])
@@ -348,6 +407,13 @@ function Contracts({ api }) {
     await api.uploadContractDocument(row.id, selectedFile)
     load()
   }
+
+  function renderActions(row) {
+    return (
+      <label className="inline-upload"><FileUp size={16} /> Archivo<input type="file" accept=".pdf,.doc,.docx" onChange={(e) => uploadFor(row, e.target.files?.[0])} /></label>
+    )
+  }
+
   return (
     <section className="split">
       <form className="panel form-grid" onSubmit={submit}>
@@ -359,11 +425,13 @@ function Contracts({ api }) {
         <label className="full">Contrato PDF o Word<input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(e) => setFile(e.target.files?.[0] || null)} /></label>
         <button className="primary">Registrar</button>
       </form>
-      <div className="panel"><h2>Historial</h2><Table rows={rows} columns={['employeeName', 'contractType', 'startDate', 'endDate', 'status']} actions={(row) => (
-        <label className="inline-upload"><FileUp size={16} /> Archivo<input type="file" accept=".pdf,.doc,.docx" onChange={(e) => uploadFor(row, e.target.files?.[0])} /></label>
-      )} /></div>
+      <div className="panel"><h2>Historial</h2><Table rows={rows} columns={['employeeName', 'contractType', 'startDate', 'endDate', 'status']} actions={renderActions} /></div>
     </section>
   )
+}
+
+Contracts.propTypes = {
+  api: apiShape.isRequired,
 }
 
 function Reports({ api }) {
@@ -371,7 +439,7 @@ function Reports({ api }) {
   const [rows, setRows] = useState([])
   const load = () => api.report(type).then((data) => setRows(Array.isArray(data) ? data : []))
   useEffect(() => { load() }, [type])
-  const columns = type === 'attendance' ? ['employeeName', 'workDate', 'checkIn', 'checkOut', 'status'] : type === 'vacations' ? ['employeeName', 'startDate', 'endDate', 'status'] : ['firstName', 'lastName', 'position', 'area', 'location']
+  const columns = reportColumns(type)
   return (
     <section className="panel">
       <div className="toolbar">
@@ -386,6 +454,10 @@ function Reports({ api }) {
       <Table rows={rows} columns={columns} />
     </section>
   )
+}
+
+Reports.propTypes = {
+  api: apiShape.isRequired,
 }
 
 function UsersPanel({ api }) {
@@ -418,6 +490,10 @@ function UsersPanel({ api }) {
   )
 }
 
+UsersPanel.propTypes = {
+  api: apiShape.isRequired,
+}
+
 function Audit({ api }) {
   const [rows, setRows] = useState([])
   const [filter, setFilter] = useState('')
@@ -433,6 +509,10 @@ function Audit({ api }) {
       <Table rows={rows} columns={['actorName', 'actorDni', 'actorPosition', 'action', 'module', 'occurredAt', 'description']} />
     </section>
   )
+}
+
+Audit.propTypes = {
+  api: apiShape.isRequired,
 }
 
 function RequestTable({ rows = [], documents = {}, api, user, load, uploadFor }) {
@@ -462,7 +542,7 @@ function RequestTable({ rows = [], documents = {}, api, user, load, uploadFor })
               {user.role !== 'EMPLEADO' && row.status === 'PENDIENTE' && <>
                 <button onClick={() => api.approveRequest(row.id).then(load)}>Aprobar</button>
                 <button onClick={() => {
-                  const reason = window.prompt('Motivo de rechazo')
+                  const reason = globalThis.prompt('Motivo de rechazo')
                   if (reason) api.rejectRequest(row.id, reason).then(load)
                 }}>Rechazar</button>
               </>}
@@ -473,6 +553,15 @@ function RequestTable({ rows = [], documents = {}, api, user, load, uploadFor })
       </table>
     </div>
   )
+}
+
+RequestTable.propTypes = {
+  api: apiShape.isRequired,
+  documents: PropTypes.objectOf(PropTypes.arrayOf(rowShape)),
+  load: PropTypes.func.isRequired,
+  rows: PropTypes.arrayOf(rowShape),
+  uploadFor: PropTypes.func.isRequired,
+  user: userShape.isRequired,
 }
 
 function Table({ rows = [], columns, actions, empty = 'Sin datos.' }) {
@@ -487,8 +576,15 @@ function Table({ rows = [], columns, actions, empty = 'Sin datos.' }) {
   )
 }
 
+Table.propTypes = {
+  actions: PropTypes.func,
+  columns: PropTypes.arrayOf(PropTypes.string).isRequired,
+  empty: PropTypes.string,
+  rows: PropTypes.arrayOf(rowShape),
+}
+
 function createApi(setError) {
-  async function request(method, path, body, auth = true) {
+  async function request(method, path, body) {
     setError('')
     const headers = { 'Content-Type': 'application/json' }
     const csrf = await csrfToken(method)
@@ -562,12 +658,12 @@ function createApi(setError) {
         return
       }
       const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
+      const url = globalThis.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       link.download = filename
       link.click()
-      window.URL.revokeObjectURL(url)
+      globalThis.URL.revokeObjectURL(url)
   }
 }
 
@@ -643,6 +739,12 @@ function reportFormat(value) {
   return value
 }
 
+function reportColumns(type) {
+  if (type === 'attendance') return ['employeeName', 'workDate', 'checkIn', 'checkOut', 'status']
+  if (type === 'vacations') return ['employeeName', 'startDate', 'endDate', 'status']
+  return ['firstName', 'lastName', 'position', 'area', 'location']
+}
+
 function auditPath(filter) {
   const query = String(filter || '').trim()
   if (!query) return '/audit'
@@ -662,13 +764,14 @@ async function csrfToken(method) {
 let cachedCsrfToken = ''
 
 function navigationFor(role) {
-  const all = [{ id: 'dashboard', label: 'Panel', icon: ShieldCheck }]
-  if (['ADMIN', 'RRHH', 'JEFE'].includes(role)) all.push({ id: 'employees', label: 'Empleados', icon: Users })
-  all.push({ id: 'attendance', label: 'Asistencia', icon: Fingerprint })
-  all.push({ id: 'requests', label: 'Solicitudes', icon: ClipboardList })
-  if (['ADMIN', 'RRHH'].includes(role)) all.push({ id: 'contracts', label: 'Contratos', icon: BriefcaseBusiness }, { id: 'reports', label: 'Reportes', icon: FileText })
-  if (role === 'ADMIN') all.push({ id: 'users', label: 'Usuarios', icon: UserPlus }, { id: 'audit', label: 'Auditoria', icon: ShieldCheck })
-  return all
+  return [
+    { id: 'dashboard', label: 'Panel', icon: ShieldCheck },
+    ...(['ADMIN', 'RRHH', 'JEFE'].includes(role) ? [{ id: 'employees', label: 'Empleados', icon: Users }] : []),
+    { id: 'attendance', label: 'Asistencia', icon: Fingerprint },
+    { id: 'requests', label: 'Solicitudes', icon: ClipboardList },
+    ...(['ADMIN', 'RRHH'].includes(role) ? [{ id: 'contracts', label: 'Contratos', icon: BriefcaseBusiness }, { id: 'reports', label: 'Reportes', icon: FileText }] : []),
+    ...(role === 'ADMIN' ? [{ id: 'users', label: 'Usuarios', icon: UserPlus }, { id: 'audit', label: 'Auditoria', icon: ShieldCheck }] : []),
+  ]
 }
 
 function titleFor(view) {
