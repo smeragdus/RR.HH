@@ -43,6 +43,9 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+      - name: Preparar Maven
+        run: chmod +x backend/mvnw
+
       - name: Compilar backend
         working-directory: backend
         run: ./mvnw -B test -Dfrontend.skip=true
